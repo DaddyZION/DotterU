@@ -1,0 +1,65 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stream Joystick Control</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.9.0/nipplejs.min.js"></script>
+</head>
+<body>
+  <h1>Control the Stream Character!</h1>
+  <div>
+    <input id="username" placeholder="Enter username" />
+    <button id="enterBtn">Enter</button>
+  </div>
+  <div id="joystick" style="display:none;"></div>
+  <script>
+    let socket, username, color;
+    function getRandomColor() {
+      return '#' + Math.floor(Math.random()*16777215).toString(16);
+    }
+
+    document.getElementById('enterBtn').onclick = function() {
+      username = document.getElementById('username').value.trim();
+      if (!username) return alert('Please enter a username!');
+      color = getRandomColor();
+      socket = new WebSocket('ws://localhost:8080');
+      socket.onopen = function() {
+        socket.send(JSON.stringify({ type: 'join', username, color }));
+      };
+      document.getElementById('joystick').style.display = '';
+      document.getElementById('username').disabled = true;
+      document.getElementById('enterBtn').disabled = true;
+
+      const joystick = nipplejs.create({
+        zone: document.getElementById('joystick'),
+        mode: 'static',
+        position: { left: '50%', top: '50%' },
+        color: 'blue'
+      });
+
+      joystick.on('move', function (evt, data) {
+        if (data && data.direction) {
+          socket.send(JSON.stringify({
+            type: 'move',
+            username,
+            direction: data.direction.angle,
+            force: data.force
+          }));
+        }
+      });
+
+      socket.onmessage = function(event) {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'error') {
+          alert(msg.message);
+          document.getElementById('username').disabled = false;
+          document.getElementById('enterBtn').disabled = false;
+          document.getElementById('joystick').style.display = 'none';
+          socket.close();
+        }
+      };
+    };
+  </script>
+</body>
+</html>
