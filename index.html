@@ -83,16 +83,16 @@ function setupJoystick() {
     if (
       joined &&
       data &&
-      data.direction &&
+      data.angle && // <--- use angle, not direction
       socket &&
       socket.readyState === 1 &&
-      now - lastMoveSent > 50 // send at most every 50ms
+      now - lastMoveSent > 50 // throttle
     ) {
       lastMoveSent = now;
       socket.send(JSON.stringify({
         type: 'move',
         username,
-        direction: data.direction.angle,
+        direction: data.angle.degree, // <--- always send angle in degrees
         force: data.force
       }));
     }
