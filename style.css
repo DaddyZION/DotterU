@@ -105,8 +105,8 @@ button:disabled {
 
 .character {
   position: absolute;
-  width: 54px;
-  height: 54px;
+  width: 250px;
+  height: 250px;
   border-radius: 50%;
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
   border: 2px solid #fff8;
