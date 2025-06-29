@@ -50,10 +50,20 @@ wss.on('connection', ws => {
       let prevX = users[currentUser].x;
       let prevY = users[currentUser].y;
 
-      if (data.direction === 'up') users[currentUser].y -= speed;
-      if (data.direction === 'down') users[currentUser].y += speed;
-      if (data.direction === 'left') users[currentUser].x -= speed;
-      if (data.direction === 'right') users[currentUser].x += speed;
+      // Use angle for smooth movement
+      let angleDeg = data.direction;
+      if (typeof angleDeg === 'string') {
+        // If it's a string like "up", "down", fallback to old logic
+        if (angleDeg === 'up') users[currentUser].y -= speed;
+        else if (angleDeg === 'down') users[currentUser].y += speed;
+        else if (angleDeg === 'left') users[currentUser].x -= speed;
+        else if (angleDeg === 'right') users[currentUser].x += speed;
+      } else if (typeof angleDeg === 'number') {
+        // 0deg is right, 90deg is down, 180deg is left, 270deg is up (nipplejs)
+        const angleRad = angleDeg * Math.PI / 180;
+        users[currentUser].x += Math.cos(angleRad) * speed;
+        users[currentUser].y += Math.sin(angleRad) * speed;
+      }
 
       // Clamp to edges
       users[currentUser].x = Math.max(0, Math.min(users[currentUser].x, OVERLAY_WIDTH - DOT_SIZE));
