@@ -4,24 +4,31 @@
 <head>
   <meta charset="UTF-8">
   <title>Stream Joystick Control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.9.0/nipplejs.min.js"></script>
   <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
     body {
       background: linear-gradient(135deg, #23234a 0%, #3a3a6a 100%);
       color: #fff;
       font-family: 'Segoe UI', Arial, sans-serif;
-      margin: 0;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
+      box-sizing: border-box;
     }
     h1 {
       margin-top: 40px;
       font-size: 2.2rem;
       letter-spacing: 1px;
       text-shadow: 0 2px 8px #0006;
+      text-align: center;
     }
     .panel {
       background: #23234aee;
@@ -33,6 +40,7 @@
       flex-direction: column;
       align-items: center;
       gap: 18px;
+      max-width: 95vw;
     }
     input, button, #color {
       font-size: 1.1rem;
@@ -41,6 +49,7 @@
       padding: 8px 14px;
       margin: 0 4px;
       outline: none;
+      max-width: 90vw;
     }
     input[type="color"] {
       width: 44px;
@@ -70,6 +79,11 @@
       border-radius: 50%;
       box-shadow: 0 2px 12px #0003;
       align-self: center;
+      touch-action: none;
+      max-width: 90vw;
+      max-height: 40vw;
+      min-width: 120px;
+      min-height: 120px;
     }
     .footer {
       margin-top: auto;
@@ -79,12 +93,17 @@
       text-align: center;
       opacity: 0.7;
     }
+    @media (max-width: 600px) {
+      h1 { font-size: 1.3rem; margin-top: 18px; }
+      .panel { padding: 18px 8px 14px 8px; margin-top: 12px; }
+      #joystick { width: 120px; height: 120px; min-width: 80px; min-height: 80px; }
+    }
   </style>
 </head>
 <body>
   <h1>Control the Stream Character!</h1>
   <div class="panel">
-    <input id="username" placeholder="Enter username" maxlength="16" />
+    <input id="username" placeholder="Enter username" maxlength="16" autocomplete="off" />
     <input type="color" id="color" title="Pick your color" />
     <button id="enterBtn">Enter</button>
   </div>
@@ -93,10 +112,9 @@
     Powered by DotterU &middot; Use the joystick to move your character!
   </div>
   <script>
-    let socket, username, color;
+    let socket, username, color, joystick;
     // Always generate a bright color
     function getRandomBrightColor() {
-      // HSL: high lightness and saturation
       const h = Math.floor(Math.random() * 360);
       const s = 80 + Math.floor(Math.random() * 20); // 80-100%
       const l = 55 + Math.floor(Math.random() * 15); // 55-70%
@@ -108,7 +126,6 @@
     colorInput.value = "#ffcc33";
     colorInput.style.background = "#ffcc33";
     let pickedColor = getRandomBrightColor();
-    // Set color input to random bright color
     function hslToHex(h,s,l) {
       s /= 100; l /= 100;
       let c = (1 - Math.abs(2 * l - 1)) * s,
@@ -151,11 +168,15 @@
       document.getElementById('color').disabled = true;
       document.getElementById('enterBtn').disabled = true;
 
-      const joystick = nipplejs.create({
+      // Remove previous joystick if any
+      if (joystick && joystick.destroy) joystick.destroy();
+
+      joystick = nipplejs.create({
         zone: document.getElementById('joystick'),
         mode: 'static',
         position: { left: '50%', top: '50%' },
-        color: color
+        color: color,
+        size: Math.min(document.getElementById('joystick').offsetWidth, document.getElementById('joystick').offsetHeight) - 20
       });
 
       joystick.on('move', function (evt, data) {
@@ -169,6 +190,10 @@
         }
       });
 
+      joystick.on('end', function () {
+        // Optionally, you can send a stop signal here if needed
+      });
+
       socket.onmessage = function(event) {
         const msg = JSON.parse(event.data);
         if (msg.type === 'error') {
@@ -177,10 +202,16 @@
           document.getElementById('color').disabled = false;
           document.getElementById('enterBtn').disabled = false;
           document.getElementById('joystick').style.display = 'none';
+          if (joystick && joystick.destroy) joystick.destroy();
           socket.close();
         }
       };
     };
+
+    // Mobile: allow pressing Enter on keyboard to submit
+    document.getElementById('username').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('enterBtn').click();
+    });
   </script>
 </body>
 </html>
