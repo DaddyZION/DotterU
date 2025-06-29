@@ -106,13 +106,7 @@ wss.on('connection', ws => {
       users[currentUser].x = Math.max(0, Math.min(users[currentUser].x, OVERLAY_WIDTH - DOT_SIZE));
       users[currentUser].y = Math.max(0, Math.min(users[currentUser].y, OVERLAY_HEIGHT - DOT_SIZE));
 
-      // Prevent overlap with other users (simple collision resolution)
-      for (const [otherName, other] of Object.entries(users)) {
-        if (otherName === currentUser) continue;
-        const dx = users[currentUser].x - other.x;
-        const dy = users[currentUser].y - other.y;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist < DOT_SIZE) {
+      
           // Push back to previous position (simple resolution)
           users[currentUser].x = prevX;
           users[currentUser].y = prevY;
