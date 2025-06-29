@@ -24,7 +24,7 @@
 <body>
   <div id="overlay"></div>
   <script>
-    const socket = new WebSocket('ws://localhost:8080');
+    const socket = new WebSocket('wss://dotteru.onrender.com');
     socket.onmessage = function(event) {
       const msg = JSON.parse(event.data);
       if (msg.type === 'state') {

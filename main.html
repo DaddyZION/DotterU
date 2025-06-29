@@ -23,7 +23,7 @@
       username = document.getElementById('username').value.trim();
       if (!username) return alert('Please enter a username!');
       color = getRandomColor();
-      socket = new WebSocket('ws://localhost:8080');
+      socket = new WebSocket('wss://dotteru.onrender.com');
       socket.onopen = function() {
         socket.send(JSON.stringify({ type: 'join', username, color }));
       };
