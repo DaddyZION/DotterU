@@ -9,6 +9,13 @@ const OVERLAY_HEIGHT = 1080;
 const ipUserCounts = {}; // { ip: count }
 const MAX_USERS_PER_IP = 5;
 
+// List of sprite filenames
+const SPRITES = [
+  'sprites/sprite1.png',
+  'sprites/sprite2.png',
+  'sprites/sprite3.png'
+];
+
 function getIP(ws) {
   return ws._socket.remoteAddress;
 }
@@ -113,3 +120,63 @@ wss.on('connection', ws => {
     }
   });
 });
+
+socket.onmessage = function(event) {
+  const msg = JSON.parse(event.data);
+  if (msg.type === 'state') {
+    Object.values(characters).forEach(c => c.updated = false);
+
+    msg.users.forEach(user => {
+      let c = characters[user.username];
+      if (!c) {
+        // Pick a random sprite for each new user
+        const sprite = SPRITES[Math.floor(Math.random() * SPRITES.length)];
+        const div = document.createElement('div');
+        div.className = 'character';
+        div.dataset.sprite = sprite;
+        div.style.backgroundImage = `url('${sprite}')`;
+        overlay.appendChild(div);
+        c = characters[user.username] = {
+          div,
+          x: user.x, y: user.y,
+          tx: user.x, ty: user.y,
+          color: user.color,
+          sprite: sprite,
+          lastX: user.x // for mirroring
+        };
+      }
+      c.tx = user.x;
+      c.ty = user.y;
+      c.color = user.color;
+      c.updated = true;
+    });
+
+    // Remove characters not in update
+    for (const [username, c] of Object.entries(characters)) {
+      if (!c.updated) {
+        overlay.removeChild(c.div);
+        delete characters[username];
+      }
+    }
+  }
+};
+
+// Animation loop for interpolation and mirroring
+function animate() {
+  for (const c of Object.values(characters)) {
+    c.x = lerp(c.x, c.tx, 0.25);
+    c.y = lerp(c.y, c.ty, 0.25);
+    c.div.style.left = c.x + 'px';
+    c.div.style.top = c.y + 'px';
+
+    // Mirror sprite if moving left
+    if (c.x < (c.lastX || c.x)) {
+      c.div.style.transform = 'scaleX(-1)';
+    } else if (c.x > (c.lastX || c.x)) {
+      c.div.style.transform = 'scaleX(1)';
+    }
+    c.lastX = c.x;
+  }
+  requestAnimationFrame(animate);
+}
+animate();

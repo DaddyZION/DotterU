@@ -37,6 +37,13 @@ const socket = new WebSocket('wss://dotteru.onrender.com');
 const overlay = document.getElementById('overlay');
 const characters = {}; // username: { div, x, y, tx, ty, color }
 
+// List of sprite filenames (add more as you add them to the sprites folder)
+const SPRITES = [
+  'sprites/sprite1.png',
+  // 'sprites/sprite2.png',
+  // 'sprites/sprite3.png'
+];
+
 function lerp(a, b, t) {
   return a + (b - a) * t;
 }
@@ -44,26 +51,28 @@ function lerp(a, b, t) {
 socket.onmessage = function(event) {
   const msg = JSON.parse(event.data);
   if (msg.type === 'state') {
-    // Mark all as not updated
     Object.values(characters).forEach(c => c.updated = false);
 
     msg.users.forEach(user => {
       let c = characters[user.username];
       if (!c) {
-        // Create new character
+        // Pick a random sprite for each new user
+        const sprite = SPRITES[Math.floor(Math.random() * SPRITES.length)];
         const div = document.createElement('div');
         div.className = 'character';
+        div.dataset.sprite = sprite;
+        div.style.backgroundImage = `url('${sprite}')`;
         overlay.appendChild(div);
         c = characters[user.username] = {
           div,
           x: user.x, y: user.y,
           tx: user.x, ty: user.y,
-          color: user.color
+          sprite: sprite,
+          lastX: user.x // for mirroring
         };
       }
       c.tx = user.x;
       c.ty = user.y;
-      c.color = user.color;
       c.updated = true;
     });
 
@@ -77,14 +86,21 @@ socket.onmessage = function(event) {
   }
 };
 
-// Animation loop for interpolation
+// Animation loop for interpolation and mirroring
 function animate() {
   for (const c of Object.values(characters)) {
-    c.x = lerp(c.x, c.tx, 0.25); // 0.25 = smoothing factor
+    c.x = lerp(c.x, c.tx, 0.25);
     c.y = lerp(c.y, c.ty, 0.25);
     c.div.style.left = c.x + 'px';
     c.div.style.top = c.y + 'px';
-    c.div.style.background = c.color;
+
+    // Mirror sprite if moving left
+    if (c.x < (c.lastX || c.x)) {
+      c.div.style.transform = 'scaleX(-1)';
+    } else if (c.x > (c.lastX || c.x)) {
+      c.div.style.transform = 'scaleX(1)';
+    }
+    c.lastX = c.x;
   }
   requestAnimationFrame(animate);
 }
