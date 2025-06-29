@@ -2,10 +2,16 @@
 const WebSocket = require('ws');
 const wss = new WebSocket.Server({ port: 8080 });
 
-const users = {}; // username: { x, y, color, ws }
+const users = {}; // username: { x, y, color, ws, ip }
 const DOT_SIZE = 18;
 const OVERLAY_WIDTH = 1920;
 const OVERLAY_HEIGHT = 1080;
+const ipUserCounts = {}; // { ip: count }
+const MAX_USERS_PER_IP = 5;
+
+function getIP(ws) {
+  return ws._socket.remoteAddress;
+}
 
 function broadcastState() {
   const state = Object.entries(users).map(([username, u]) => ({
@@ -32,6 +38,14 @@ wss.on('connection', ws => {
     try { data = JSON.parse(message); } catch { return; }
 
     if (data.type === 'join') {
+      const ip = getIP(ws);
+      ipUserCounts[ip] = ipUserCounts[ip] || 0;
+
+      if (ipUserCounts[ip] >= MAX_USERS_PER_IP) {
+        ws.send(JSON.stringify({ type: 'error', message: `Only ${MAX_USERS_PER_IP} users allowed per IP.` }));
+        return;
+      }
+
       if (users[data.username]) {
         ws.send(JSON.stringify({ type: 'error', message: 'Username already taken.' }));
         return;
@@ -40,8 +54,10 @@ wss.on('connection', ws => {
         x: Math.floor(Math.random() * 400) + 50,
         y: Math.floor(Math.random() * 300) + 50,
         color: data.color,
-        ws
+        ws,
+        ip
       };
+      ipUserCounts[ip]++;
       currentUser = data.username;
     }
 
@@ -87,7 +103,13 @@ wss.on('connection', ws => {
 
   ws.on('close', () => {
     if (currentUser && users[currentUser]) {
+      const ip = users[currentUser].ip;
       delete users[currentUser];
+      if (ip && ipUserCounts[ip]) {
+        ipUserCounts[ip]--;
+        if (ipUserCounts[ip] <= 0)
+          delete ipUserCounts[ip];
+      }
     }
   });
 });
