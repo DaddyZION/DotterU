@@ -107,10 +107,10 @@ button:disabled {
   position: absolute;
   width: 112px;
   height: 112px;
-  border-radius: 0;
-  box-shadow: none;
-  border: none;
-  background: center center / contain no-repeat;
+  border-radius: 0;         /* No circle */
+  box-shadow: none;         /* No shadow */
+  border: none;             /* No border */
+  background: center center / contain no-repeat; /* Fit entire image */
   display: flex;
   align-items: center;
   justify-content: center;
