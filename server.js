@@ -16,6 +16,9 @@ const SPRITES = [
   'sprites/sprite3.png'
 ];
 
+const assignedSprites = {}; // username -> sprite
+let availableSprites = [...SPRITES];
+
 function getIP(ws) {
   return ws._socket.remoteAddress;
 }
@@ -25,7 +28,8 @@ function broadcastState() {
     username,
     x: u.x,
     y: u.y,
-    color: u.color
+    color: u.color,
+    sprite: u.sprite // send sprite info
   }));
   wss.clients.forEach(client => {
     if (client.readyState === WebSocket.OPEN) {
@@ -57,12 +61,22 @@ wss.on('connection', ws => {
         ws.send(JSON.stringify({ type: 'error', message: 'Username already taken.' }));
         return;
       }
+
+      // Assign a unique sprite
+      if (availableSprites.length === 0) {
+        // Recycle: all sprites are used, reset the pool
+        availableSprites = [...SPRITES];
+      }
+      const sprite = availableSprites.splice(Math.floor(Math.random() * availableSprites.length), 1)[0];
+      assignedSprites[data.username] = sprite;
+
       users[data.username] = {
         x: Math.floor(Math.random() * 400) + 50,
         y: Math.floor(Math.random() * 300) + 50,
         color: data.color,
         ws,
-        ip
+        ip,
+        sprite // store sprite with user
       };
       ipUserCounts[ip]++;
       currentUser = data.username;
@@ -111,6 +125,11 @@ wss.on('connection', ws => {
   ws.on('close', () => {
     if (currentUser && users[currentUser]) {
       const ip = users[currentUser].ip;
+      // Release sprite
+      if (assignedSprites[currentUser]) {
+        availableSprites.push(assignedSprites[currentUser]);
+        delete assignedSprites[currentUser];
+      }
       delete users[currentUser];
       if (ip && ipUserCounts[ip]) {
         ipUserCounts[ip]--;

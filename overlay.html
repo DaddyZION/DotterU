@@ -56,19 +56,16 @@ socket.onmessage = function(event) {
     msg.users.forEach(user => {
       let c = characters[user.username];
       if (!c) {
-        // Pick a random sprite for each new user
-        const sprite = SPRITES[Math.floor(Math.random() * SPRITES.length)];
         const div = document.createElement('div');
         div.className = 'character';
-        div.dataset.sprite = sprite;
-        div.style.backgroundImage = `url('${sprite}')`;
+        div.style.backgroundImage = `url('${user.sprite}')`;
         overlay.appendChild(div);
         c = characters[user.username] = {
           div,
           x: user.x, y: user.y,
           tx: user.x, ty: user.y,
-          sprite: sprite,
-          lastX: user.x // for mirroring
+          sprite: user.sprite,
+          lastX: user.x
         };
       }
       c.tx = user.x;
