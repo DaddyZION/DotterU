@@ -62,7 +62,7 @@ wss.on('connection', ws => {
         // 0deg is right, 90deg is down, 180deg is left, 270deg is up (nipplejs)
         const angleRad = angleDeg * Math.PI / 180;
         users[currentUser].x += Math.cos(angleRad) * speed;
-        users[currentUser].y += Math.sin(angleRad) * speed;
+        users[currentUser].y -= Math.sin(angleRad) * speed; // Invert Y for screen coordinates
       }
 
       // Clamp to edges
