@@ -18,15 +18,16 @@
     }
     .character {
       position: absolute;
-      width: 112px;   /* 56px / 3 ≈ 18px */
+      width: 112px;
       height: 112px;
-      border-radius: 50%;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
-      border: 2px solid #fff8;
+      border-radius: 0;         /* No circle */
+      box-shadow: none;         /* No shadow */
+      border: none;             /* No border */
+      background: center center / contain no-repeat; /* Show full sprite */
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: left 0.1s, top 0.1s, box-shadow 0.2s;
+      transition: left 0.1s, top 0.1s, transform 0.1s;
     }
   </style>
 </head>
