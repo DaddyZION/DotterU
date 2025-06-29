@@ -90,35 +90,19 @@ wss.on('connection', ws => {
       // Use angle for smooth movement
       let angleDeg = data.direction;
       if (typeof angleDeg === 'string') {
-        // If it's a string like "up", "down", fallback to old logic
         if (angleDeg === 'up') users[currentUser].y -= speed;
         else if (angleDeg === 'down') users[currentUser].y += speed;
         else if (angleDeg === 'left') users[currentUser].x -= speed;
         else if (angleDeg === 'right') users[currentUser].x += speed;
       } else if (typeof angleDeg === 'number') {
-        // 0deg is right, 90deg is down, 180deg is left, 270deg is up (nipplejs)
         const angleRad = angleDeg * Math.PI / 180;
         users[currentUser].x += Math.cos(angleRad) * speed;
-        users[currentUser].y -= Math.sin(angleRad) * speed; // Invert Y for screen coordinates
+        users[currentUser].y -= Math.sin(angleRad) * speed;
       }
 
       // Clamp to edges
       users[currentUser].x = Math.max(0, Math.min(users[currentUser].x, OVERLAY_WIDTH - DOT_SIZE));
       users[currentUser].y = Math.max(0, Math.min(users[currentUser].y, OVERLAY_HEIGHT - DOT_SIZE));
-
-      // Prevent overlap with other users (simple collision resolution)
-      for (const [otherName, other] of Object.entries(users)) {
-        if (otherName === currentUser) continue;
-        const dx = users[currentUser].x - other.x;
-        const dy = users[currentUser].y - other.y;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist < DOT_SIZE) {
-          // Push back to previous position (simple resolution)
-          users[currentUser].x = prevX;
-          users[currentUser].y = prevY;
-          break;
-        }
-      }
     }
   });
 
