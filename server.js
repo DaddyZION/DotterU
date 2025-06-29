@@ -18,16 +18,17 @@ function broadcastState() {
   });
 }
 
+// Broadcast state every 30ms (about 33fps)
+setInterval(broadcastState, 30);
+
 wss.on('connection', ws => {
   let currentUser = null;
-  let lastMove = 0;
 
   ws.on('message', message => {
     let data;
     try { data = JSON.parse(message); } catch { return; }
 
     if (data.type === 'join') {
-      // Prevent duplicate usernames
       if (users[data.username]) {
         ws.send(JSON.stringify({ type: 'error', message: 'Username already taken.' }));
         return;
@@ -39,29 +40,21 @@ wss.on('connection', ws => {
         ws
       };
       currentUser = data.username;
-      broadcastState();
     }
 
     if (data.type === 'move' && currentUser && users[currentUser]) {
-      // Rate limit: 20 moves per second max
-      const now = Date.now();
-      if (now - lastMove < 50) return;
-      lastMove = now;
-
-      // Move user
+      // Move user (no rate limit here)
       const speed = 10 * (data.force || 1);
       if (data.direction === 'up') users[currentUser].y -= speed;
       if (data.direction === 'down') users[currentUser].y += speed;
       if (data.direction === 'left') users[currentUser].x -= speed;
       if (data.direction === 'right') users[currentUser].x += speed;
-      broadcastState();
     }
   });
 
   ws.on('close', () => {
     if (currentUser && users[currentUser]) {
       delete users[currentUser];
-      broadcastState();
     }
   });
 });

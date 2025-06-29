@@ -1,0 +1,110 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: linear-gradient(135deg, #23234a 0%, #3a3a6a 100%);
+  color: #fff;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+}
+
+h1 {
+  margin-top: 40px;
+  font-size: 2.2rem;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px #0006;
+  text-align: center;
+}
+
+.panel {
+  background: #23234aee;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px #0004;
+  padding: 32px 28px 24px 28px;
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  max-width: 95vw;
+}
+
+input, button, #color {
+  font-size: 1.1rem;
+  border-radius: 8px;
+  border: none;
+  padding: 8px 14px;
+  margin: 0 4px;
+  outline: none;
+  max-width: 90vw;
+}
+
+input[type="color"] {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 2px solid #fff3;
+  background: none;
+  cursor: pointer;
+}
+
+button {
+  background: #5a6cff;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+button:disabled {
+  background: #888;
+  cursor: not-allowed;
+}
+
+#joystick {
+  margin-top: 40px;
+  display: block;
+  width: 180px;
+  height: 180px;
+  background: transparent; /* Remove background */
+  border-radius: 50%;
+  box-shadow: 0 2px 24px #000a;
+  align-self: center;
+  touch-action: none;
+  max-width: 90vw;
+  max-height: 40vw;
+  min-width: 120px;
+  min-height: 120px;
+  border: 3px solid #fff;
+  position: relative;
+  z-index: 9999 !important; /* Force to front */
+}
+
+#joystick .nipple, #joystick .nipple * {
+  z-index: 10000 !important;
+  position: absolute !important;
+  pointer-events: auto !important;
+}
+
+.footer {
+  margin-top: auto;
+  padding: 18px;
+  color: #aaa;
+  font-size: 0.95rem;
+  text-align: center;
+  opacity: 0.7;
+}
+
+@media (max-width: 600px) {
+  h1 { font-size: 1.3rem; margin-top: 18px; }
+  .panel { padding: 18px 8px 14px 8px; margin-top: 12px; }
+  #joystick { width: 120px; height: 120px; min-width: 80px; min-height: 80px; }
+}

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Joystick Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.9.0/nipplejs.min.js"></script>
+  <style>
+    body { background: #222; }
+    #joystick {
+      margin: 100px auto;
+      display: block;
+      width: 180px;
+      height: 180px;
+      background: #23234a44;
+      border-radius: 50%;
+      border: 2px dashed #444;
+    }
+  </style>
+</head>
+<body>
+  <div id="joystick"></div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      nipplejs.create({
+        zone: document.getElementById('joystick'),
+        mode: 'static',
+        position: { left: '50%', top: '50%' },
+        color: '#111',
+        size: 160
+      });
+    });
+  </script>
+</body>
+</html>
