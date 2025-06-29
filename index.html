@@ -5,37 +5,157 @@
   <meta charset="UTF-8">
   <title>Stream Joystick Control</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.9.0/nipplejs.min.js"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #23234a 0%, #3a3a6a 100%);
+      color: #fff;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    h1 {
+      margin-top: 40px;
+      font-size: 2.2rem;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 8px #0006;
+    }
+    .panel {
+      background: #23234aee;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px #0004;
+      padding: 32px 28px 24px 28px;
+      margin-top: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+    input, button, #color {
+      font-size: 1.1rem;
+      border-radius: 8px;
+      border: none;
+      padding: 8px 14px;
+      margin: 0 4px;
+      outline: none;
+    }
+    input[type="color"] {
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border: 2px solid #fff3;
+      background: none;
+      cursor: pointer;
+    }
+    button {
+      background: #5a6cff;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:disabled {
+      background: #888;
+      cursor: not-allowed;
+    }
+    #joystick {
+      margin-top: 40px;
+      display: none;
+      width: 180px;
+      height: 180px;
+      background: #23234a44;
+      border-radius: 50%;
+      box-shadow: 0 2px 12px #0003;
+      align-self: center;
+    }
+    .footer {
+      margin-top: auto;
+      padding: 18px;
+      color: #aaa;
+      font-size: 0.95rem;
+      text-align: center;
+      opacity: 0.7;
+    }
+  </style>
 </head>
 <body>
   <h1>Control the Stream Character!</h1>
-  <div>
-    <input id="username" placeholder="Enter username" />
+  <div class="panel">
+    <input id="username" placeholder="Enter username" maxlength="16" />
+    <input type="color" id="color" title="Pick your color" />
     <button id="enterBtn">Enter</button>
   </div>
-  <div id="joystick" style="display:none;"></div>
+  <div id="joystick"></div>
+  <div class="footer">
+    Powered by DotterU &middot; Use the joystick to move your character!
+  </div>
   <script>
     let socket, username, color;
-    function getRandomColor() {
-      return '#' + Math.floor(Math.random()*16777215).toString(16);
+    // Always generate a bright color
+    function getRandomBrightColor() {
+      // HSL: high lightness and saturation
+      const h = Math.floor(Math.random() * 360);
+      const s = 80 + Math.floor(Math.random() * 20); // 80-100%
+      const l = 55 + Math.floor(Math.random() * 15); // 55-70%
+      return `hsl(${h},${s}%,${l}%)`;
     }
+
+    // Set initial color
+    const colorInput = document.getElementById('color');
+    colorInput.value = "#ffcc33";
+    colorInput.style.background = "#ffcc33";
+    let pickedColor = getRandomBrightColor();
+    // Set color input to random bright color
+    function hslToHex(h,s,l) {
+      s /= 100; l /= 100;
+      let c = (1 - Math.abs(2 * l - 1)) * s,
+          x = c * (1 - Math.abs((h / 60) % 2 - 1)),
+          m = l - c/2, r=0, g=0, b=0;
+      if (0 <= h && h < 60) { r = c; g = x; b = 0; }
+      else if (60 <= h && h < 120) { r = x; g = c; b = 0; }
+      else if (120 <= h && h < 180) { r = 0; g = c; b = x; }
+      else if (180 <= h && h < 240) { r = 0; g = x; b = c; }
+      else if (240 <= h && h < 300) { r = x; g = 0; b = c; }
+      else if (300 <= h && h < 360) { r = c; g = 0; b = x; }
+      r = Math.round((r + m) * 255);
+      g = Math.round((g + m) * 255);
+      b = Math.round((b + m) * 255);
+      return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+    // Set random bright color on load
+    (function() {
+      const h = Math.floor(Math.random() * 360);
+      const s = 90, l = 60;
+      pickedColor = `hsl(${h},${s}%,${l}%)`;
+      colorInput.value = hslToHex(h,s,l);
+      colorInput.style.background = colorInput.value;
+    })();
+    colorInput.addEventListener('input', function() {
+      pickedColor = colorInput.value;
+      colorInput.style.background = pickedColor;
+    });
 
     document.getElementById('enterBtn').onclick = function() {
       username = document.getElementById('username').value.trim();
       if (!username) return alert('Please enter a username!');
-      color = getRandomColor();
+      color = pickedColor;
       socket = new WebSocket('wss://dotteru.onrender.com');
       socket.onopen = function() {
         socket.send(JSON.stringify({ type: 'join', username, color }));
       };
       document.getElementById('joystick').style.display = '';
       document.getElementById('username').disabled = true;
+      document.getElementById('color').disabled = true;
       document.getElementById('enterBtn').disabled = true;
 
       const joystick = nipplejs.create({
         zone: document.getElementById('joystick'),
         mode: 'static',
         position: { left: '50%', top: '50%' },
-        color: 'blue'
+        color: color
       });
 
       joystick.on('move', function (evt, data) {
@@ -54,6 +174,7 @@
         if (msg.type === 'error') {
           alert(msg.message);
           document.getElementById('username').disabled = false;
+          document.getElementById('color').disabled = false;
           document.getElementById('enterBtn').disabled = false;
           document.getElementById('joystick').style.display = 'none';
           socket.close();
