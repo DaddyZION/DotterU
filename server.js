@@ -29,7 +29,7 @@ function broadcastState() {
     x: u.x,
     y: u.y,
     color: u.color,
-    sprite: u.sprite // send sprite info
+    sprite: u.sprite // Make sure this line is present
   }));
   wss.clients.forEach(client => {
     if (client.readyState === WebSocket.OPEN) {
@@ -76,7 +76,7 @@ wss.on('connection', ws => {
         color: data.color,
         ws,
         ip,
-        sprite // store sprite with user
+        sprite: assignedSprites[data.username] // store sprite with user
       };
       ipUserCounts[ip]++;
       currentUser = data.username;
