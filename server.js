@@ -106,11 +106,7 @@ wss.on('connection', ws => {
       users[currentUser].x = Math.max(0, Math.min(users[currentUser].x, OVERLAY_WIDTH - DOT_SIZE));
       users[currentUser].y = Math.max(0, Math.min(users[currentUser].y, OVERLAY_HEIGHT - DOT_SIZE));
 
-      
-          // Push back to previous position (simple resolution)
-          users[currentUser].x = prevX;
-          users[currentUser].y = prevY;
-          break;
+    
         }
       }
     }
