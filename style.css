@@ -103,6 +103,19 @@ button:disabled {
   opacity: 0.7;
 }
 
+.character {
+  position: absolute;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  border: 2px solid #fff8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: left 0.1s, top 0.1s, box-shadow 0.2s;
+}
+
 @media (max-width: 600px) {
   h1 { font-size: 1.3rem; margin-top: 18px; }
   .panel { padding: 18px 8px 14px 8px; margin-top: 12px; }

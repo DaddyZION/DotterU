@@ -3,7 +3,7 @@ const WebSocket = require('ws');
 const wss = new WebSocket.Server({ port: 8080 });
 
 const users = {}; // username: { x, y, color, ws, ip }
-const DOT_SIZE = 18;
+const DOT_SIZE = 54;
 const OVERLAY_WIDTH = 1920;
 const OVERLAY_HEIGHT = 1080;
 const ipUserCounts = {}; // { ip: count }
