@@ -11,21 +11,8 @@ const MAX_USERS_PER_IP = 2;
 
 // List of sprite filenames
 const SPRITES = [
-  'sprites/sprite1.png',
-  'sprites/sprite2.png',
-  'sprites/sprite3.png',
-  'sprites/sprite4.png',
-  'sprites/sprite5.png',
-  'sprites/sprite6.png',
-  'sprites/sprite7.png',
-  'sprites/sprite8.png',
-  'sprites/sprite9.png',
-  'sprites/sprite10.png',
-  'sprites/sprite11.png',
-  'sprites/sprite12.png',
-  'sprites/sprite13.png',
-  'sprites/sprite14.png',
-  'sprites/sprite15.png'
+  
+  'sprites/sprite17.gif'
 ];
 
 const assignedSprites = {}; // username -> sprite
