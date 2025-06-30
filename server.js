@@ -7,7 +7,7 @@ const DOT_SIZE = 10;
 const OVERLAY_WIDTH = 1920;
 const OVERLAY_HEIGHT = 1080;
 const ipUserCounts = {}; // { ip: count }
-const MAX_USERS_PER_IP = 1;
+const MAX_USERS_PER_IP = 6;
 
 // List of sprite filenames
 const SPRITES = [
