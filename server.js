@@ -3,11 +3,11 @@ const WebSocket = require('ws');
 const wss = new WebSocket.Server({ port: 8080 });
 
 const users = {}; // username: { x, y, color, ws, ip, sprite }
-const DOT_SIZE = 10;
+const DOT_SIZE = 48;
 const OVERLAY_WIDTH = 1920;
 const OVERLAY_HEIGHT = 1080;
 const ipUserCounts = {}; // { ip: count }
-const MAX_USERS_PER_IP = 6;
+const MAX_USERS_PER_IP = 2;
 
 // List of sprite filenames
 const SPRITES = [
