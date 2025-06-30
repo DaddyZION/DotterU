@@ -18,7 +18,14 @@ const SPRITES = [
   'sprites/sprite5.png',
   'sprites/sprite6.png',
   'sprites/sprite7.png',
-  'sprites/sprite8.png'
+  'sprites/sprite8.png',
+  'sprites/sprite9.png',
+  'sprites/sprite10.png',
+  'sprites/sprite11.png',
+  'sprites/sprite12.png',
+  'sprites/sprite13.png',
+  'sprites/sprite14.png',
+  'sprites/sprite15.png'
 ];
 
 const assignedSprites = {}; // username -> sprite
