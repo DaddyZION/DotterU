@@ -13,7 +13,13 @@ const MAX_USERS_PER_IP = 5;
 const SPRITES = [
   'sprites/sprite1.png',
   'sprites/sprite2.png',
-  'sprites/sprite3.png'
+  'sprites/sprite3.png',
+  'sprites/sprite4.png',
+  'sprites/sprite5.png',
+  'sprites/sprite6.png',
+  'sprites/sprite7.png',
+  'sprites/sprite8.png',
+  'sprites/sprite9.png',
 ];
 
 const assignedSprites = {}; // username -> sprite
