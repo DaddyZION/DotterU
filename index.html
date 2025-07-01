@@ -185,7 +185,7 @@ function sendWASDMove() {
 // Dancing mode variables
 let isDancing = false;
 let danceInterval = null;
-let danceAngle = 0;
+let danceTime = 0;
 
 // Dance button functionality
 const danceBtn = document.getElementById('danceBtn');
@@ -205,18 +205,24 @@ danceBtn.onclick = function() {
       wasdInterval = null;
     }
     
-    // Start dance movement
+    danceTime = 0;
+    
+    // Start bouncy dance movement (4 beats per second = 250ms intervals)
     danceInterval = setInterval(() => {
-      danceAngle += 15; // Rotate by 15 degrees each step
-      if (danceAngle >= 360) danceAngle = 0;
+      danceTime += 0.05; // Increment time for smooth animation
+      
+      // Bouncy left-right movement (4 beats per second)
+      const bounce = Math.sin(danceTime * 4 * Math.PI) * 90; // ±90 degrees bounce
+      const baseDirection = 0; // Center direction (right)
+      const direction = baseDirection + bounce; // Bounce left and right
       
       socket.send(JSON.stringify({
         type: 'move',
         username,
-        direction: danceAngle,
-        force: 1
+        direction: direction,
+        force: 1.2 // Slightly more force for bouncy movement
       }));
-    }, 100); // Send every 100ms for smooth dancing
+    }, 50); // 50ms for smooth bouncy animation
     
   } else {
     // Stop dancing
