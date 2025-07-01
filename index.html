@@ -186,6 +186,8 @@ function sendWASDMove() {
 let isDancing = false;
 let danceInterval = null;
 let danceTime = 0;
+let facingRight = true;
+let bounceCount = 0;
 
 // Dance button functionality
 const danceBtn = document.getElementById('danceBtn');
@@ -206,23 +208,39 @@ danceBtn.onclick = function() {
     }
     
     danceTime = 0;
+    bounceCount = 0;
+    facingRight = true;
     
-    // Start bouncy dance movement (4 beats per second = 250ms intervals)
+    // Start bouncy dance movement (4 beats per second)
     danceInterval = setInterval(() => {
-      danceTime += 0.05; // Increment time for smooth animation
+      danceTime += 0.25; // Increment for 4 beats per second
       
-      // Bouncy left-right movement (4 beats per second)
-      const bounce = Math.sin(danceTime * 4 * Math.PI) * 90; // ±90 degrees bounce
-      const baseDirection = 0; // Center direction (right)
-      const direction = baseDirection + bounce; // Bounce left and right
+      // Create a quick bounce effect (up and down)
+      const bounceOffset = Math.abs(Math.sin(danceTime * 4 * Math.PI)) * 30; // Bounce amplitude
+      
+      // Determine direction based on which way we're facing
+      let direction;
+      if (facingRight) {
+        direction = 0 + bounceOffset; // Face right with bounce
+      } else {
+        direction = 180 + bounceOffset; // Face left with bounce
+      }
       
       socket.send(JSON.stringify({
         type: 'move',
         username,
         direction: direction,
-        force: 1.2 // Slightly more force for bouncy movement
+        force: 0.8 // Lighter force for bouncing in place
       }));
-    }, 50); // 50ms for smooth bouncy animation
+      
+      // Count bounces and flip direction after 4
+      bounceCount++;
+      if (bounceCount >= 16) { // 4 bounces * 4 beats = 16 intervals
+        facingRight = !facingRight;
+        bounceCount = 0;
+      }
+      
+    }, 250); // 250ms = 4 beats per second
     
   } else {
     // Stop dancing
