@@ -15,6 +15,7 @@
     <input type="color" id="color" title="Pick your color" />
     <button id="enterBtn">Enter</button>
     <button id="danceBtn" disabled>🕺 Dance Mode</button>
+    <button id="flyBtn" disabled>✈️ Fly Around</button>
   </div>
   <div id="joystick"></div>
   <div class="footer">
@@ -101,6 +102,162 @@ function setupJoystick() {
 }
 setupJoystick();
 
+// Dancing mode variables
+let isDancing = false;
+let isFlying = false;
+let danceInterval = null;
+let flyInterval = null;
+let beatCount = 0;
+let facingRight = true;
+let bouncePhase = 0;
+
+// Flying variables
+let flyX = 400, flyY = 300; // Starting position
+let flyDX = 8, flyDY = 6; // Flying speed/direction
+
+// Dance button functionality
+const danceBtn = document.getElementById('danceBtn');
+danceBtn.onclick = function() {
+  if (!joined) return;
+  
+  isDancing = !isDancing;
+  
+  if (isDancing) {
+    // Stop flying if active
+    if (isFlying) {
+      isFlying = false;
+      clearInterval(flyInterval);
+      flyInterval = null;
+      document.getElementById('flyBtn').textContent = '✈️ Fly Around';
+      document.getElementById('flyBtn').style.background = '#5a6cff';
+    }
+    
+    // Start dancing
+    danceBtn.textContent = '🛑 Stop Dancing';
+    danceBtn.style.background = '#ff4444';
+    
+    // Stop WASD movement if active
+    if (wasdInterval) {
+      clearInterval(wasdInterval);
+      wasdInterval = null;
+    }
+    
+    beatCount = 0;
+    facingRight = true;
+    bouncePhase = 0;
+    
+    // Start bouncy dance (higher and faster)
+    danceInterval = setInterval(() => {
+      // Determine base direction (left/right)
+      let baseDirection = facingRight ? 0 : 180; // Right or left
+      
+      // Add bounce (up/down) - 2 bounces per second (faster)
+      bouncePhase += 0.5; // Increment for faster bouncing
+      let bounceAngle = Math.sin(bouncePhase * Math.PI * 2) * 90; // ±90 degrees bounce (higher)
+      
+      // Use primarily vertical movement for bouncing
+      let direction = 270 + bounceAngle; // Start from up (270°) and bounce
+      if (!facingRight) direction = 270 - bounceAngle; // Bounce other way when facing left
+      
+      socket.send(JSON.stringify({
+        type: 'move',
+        username,
+        direction: direction,
+        force: 0.8 // Higher force for more visible bouncing
+      }));
+      
+      beatCount++;
+      if (beatCount >= 4) { // After 4 beats, flip direction
+        facingRight = !facingRight;
+        beatCount = 0;
+      }
+      
+    }, 125); // 125ms = 8 updates per second (faster)
+    
+  } else {
+    // Stop dancing
+    danceBtn.textContent = '🕺 Dance Mode';
+    danceBtn.style.background = '#5a6cff';
+    
+    if (danceInterval) {
+      clearInterval(danceInterval);
+      danceInterval = null;
+    }
+  }
+};
+
+// Fly Around button functionality
+const flyBtn = document.getElementById('flyBtn');
+flyBtn.onclick = function() {
+  if (!joined) return;
+  
+  isFlying = !isFlying;
+  
+  if (isFlying) {
+    // Stop dancing if active
+    if (isDancing) {
+      isDancing = false;
+      clearInterval(danceInterval);
+      danceInterval = null;
+      danceBtn.textContent = '🕺 Dance Mode';
+      danceBtn.style.background = '#5a6cff';
+    }
+    
+    // Start flying
+    flyBtn.textContent = '🛑 Stop Flying';
+    flyBtn.style.background = '#ff4444';
+    
+    // Stop WASD movement if active
+    if (wasdInterval) {
+      clearInterval(wasdInterval);
+      wasdInterval = null;
+    }
+    
+    // Reset flying position and direction
+    flyX = 400;
+    flyY = 300;
+    flyDX = 8;
+    flyDY = 6;
+    
+    // Start flying animation
+    flyInterval = setInterval(() => {
+      // Update position
+      flyX += flyDX;
+      flyY += flyDY;
+      
+      // Bounce off walls (1920x1080 screen)
+      if (flyX <= 50 || flyX >= 1870) {
+        flyDX = -flyDX; // Reverse horizontal direction
+      }
+      if (flyY <= 50 || flyY >= 1030) {
+        flyDY = -flyDY; // Reverse vertical direction
+      }
+      
+      // Calculate movement direction
+      let direction = Math.atan2(-flyDY, flyDX) * 180 / Math.PI;
+      
+      socket.send(JSON.stringify({
+        type: 'move',
+        username,
+        direction: direction,
+        force: 1.5 // Higher force for flying movement
+      }));
+      
+    }, 50); // 50ms = 20 updates per second (smooth flying)
+    
+  } else {
+    // Stop flying
+    flyBtn.textContent = '✈️ Fly Around';
+    flyBtn.style.background = '#5a6cff';
+    
+    if (flyInterval) {
+      clearInterval(flyInterval);
+      flyInterval = null;
+    }
+  }
+};
+
+// Update the enterBtn onclick to enable both buttons
 document.getElementById('enterBtn').onclick = function(e) {
   e.preventDefault();
   username = document.getElementById('username').value.trim();
@@ -111,6 +268,7 @@ document.getElementById('enterBtn').onclick = function(e) {
     socket.send(JSON.stringify({ type: 'join', username, color }));
     joined = true;
     danceBtn.disabled = false; // Enable dance button
+    flyBtn.disabled = false;   // Enable fly button
   };
   document.getElementById('username').disabled = true;
   document.getElementById('color').disabled = true;
@@ -126,6 +284,7 @@ document.getElementById('enterBtn').onclick = function(e) {
       joined = false;
       socket.close();
       danceBtn.disabled = true; // Disable dance button on error
+      flyBtn.disabled = true;   // Disable fly button on error
     }
   };
 };
@@ -144,7 +303,7 @@ let wasdInterval = null;
 
 document.addEventListener('keydown', function(e) {
   if (!socket || socket.readyState !== WebSocket.OPEN) return;
-  if (!joined || isDancing) return; // Don't allow WASD when dancing
+  if (!joined || isDancing || isFlying) return; // Don't allow WASD when dancing or flying
 
   keysDown[e.key.toLowerCase()] = true;
 
@@ -181,74 +340,6 @@ function sendWASDMove() {
     }));
   }
 }
-
-// Dancing mode variables
-let isDancing = false;
-let danceInterval = null;
-let beatCount = 0;
-let facingRight = true;
-let bouncePhase = 0;
-
-// Dance button functionality
-const danceBtn = document.getElementById('danceBtn');
-danceBtn.onclick = function() {
-  if (!joined) return;
-  
-  isDancing = !isDancing;
-  
-  if (isDancing) {
-    // Start dancing
-    danceBtn.textContent = '🛑 Stop Dancing';
-    danceBtn.style.background = '#ff4444';
-    
-    // Stop WASD movement if active
-    if (wasdInterval) {
-      clearInterval(wasdInterval);
-      wasdInterval = null;
-    }
-    
-    beatCount = 0;
-    facingRight = true;
-    bouncePhase = 0;
-    
-    // Start bouncy dance (4 beats per second for direction flip, 1 bounce per second)
-    danceInterval = setInterval(() => {
-      // Determine base direction (left/right)
-      let baseDirection = facingRight ? 0 : 180; // Right or left
-      
-      // Add bounce (up/down) - 1 bounce per second
-      bouncePhase += 0.25; // Increment for 4 updates per second
-      let bounceAngle = Math.sin(bouncePhase * Math.PI * 2) * 45; // ±45 degrees bounce
-      
-      // Combine horizontal facing with vertical bounce
-      let direction = baseDirection + (bounceAngle * 0.5); // Mix the directions
-      
-      socket.send(JSON.stringify({
-        type: 'move',
-        username,
-        direction: direction,
-        force: 0.3 // Small force for bouncing in place
-      }));
-      
-      beatCount++;
-      if (beatCount >= 4) { // After 4 beats, flip direction
-        facingRight = !facingRight;
-        beatCount = 0;
-      }
-      
-    }, 250); // 250ms = 4 updates per second
-    
-  } else {
-    // Stop dancing
-    danceBtn.textContent = '🕺 Dance Mode';
-    danceBtn.style.background = '#5a6cff';
-    
-    if (danceInterval) {
-      clearInterval(danceInterval);
-      danceInterval = null;
-    }
-  }
-};
   </script>
 </body>
 </html>
