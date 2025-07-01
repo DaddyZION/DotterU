@@ -115,7 +115,7 @@ let bouncePhase = 0;
 let flyX = 400, flyY = 300;
 let flyDX = 6, flyDY = 4;
 
-// Dance button functionality (faster, smaller jiggle bounce)
+// Dance button functionality (jiggle bounce in place)
 const danceBtn = document.getElementById('danceBtn');
 danceBtn.onclick = function() {
   if (!joined) return;
@@ -146,32 +146,32 @@ danceBtn.onclick = function() {
     facingRight = true;
     bouncePhase = 0;
     
-    // Start jiggle bounce (1 bounce per second, small movement)
+    // Start bounce dance (quick alternating up/down with direction flip)
     danceInterval = setInterval(() => {
-      // Small jiggle bounce up and down
-      bouncePhase += 0.1; // Increment for 1 bounce per second (10 updates * 0.1 = 1 full cycle)
-      let bounceAngle = Math.sin(bouncePhase * Math.PI * 2) * 15; // ±15 degrees (small jiggle)
+      bouncePhase += 1; // Increment each beat
       
-      // Primarily vertical movement (up = 270°, down = 90°)
-      let direction = 270 + bounceAngle; // Up direction with small bounce
-      
-      // Add slight horizontal component based on facing direction
-      if (!facingRight) direction = 270 - bounceAngle;
+      // Quick bounce: alternate between up and down directions
+      let direction;
+      if (bouncePhase % 2 === 0) {
+        direction = facingRight ? 45 : 135; // Up-right or up-left
+      } else {
+        direction = facingRight ? 315 : 225; // Down-right or down-left
+      }
       
       socket.send(JSON.stringify({
         type: 'move',
         username,
         direction: direction,
-        force: 0.2 // Very light force for jiggle effect
+        force: 0.05 // Very tiny force to just trigger sprite direction/mirroring
       }));
       
       beatCount++;
-      if (beatCount >= 10) { // After 1 second (10 * 100ms), flip direction
+      if (beatCount >= 4) { // After 4 beats (1 second), flip direction
         facingRight = !facingRight;
         beatCount = 0;
       }
       
-    }, 100); // 100ms = 10 updates per second
+    }, 250); // 250ms = 4 beats per second for visible bouncing
     
   } else {
     // Stop dancing
@@ -185,7 +185,7 @@ danceBtn.onclick = function() {
   }
 };
 
-// Fly Around button functionality (more random)
+// Fly Around button functionality (improved wall collision)
 const flyBtn = document.getElementById('flyBtn');
 flyBtn.onclick = function() {
   if (!joined) return;
@@ -212,11 +212,11 @@ flyBtn.onclick = function() {
       wasdInterval = null;
     }
     
-    // Reset flying position with random starting point
-    flyX = Math.random() * 1000 + 200;
-    flyY = Math.random() * 600 + 200;
-    flyDX = (Math.random() - 0.5) * 16 + 6; // Random speed between -2 and 14
-    flyDY = (Math.random() - 0.5) * 16 + 4; // Random speed between -4 and 12
+    // Reset flying position with random starting point (more centered)
+    flyX = Math.random() * 1200 + 360; // Stay more in center
+    flyY = Math.random() * 600 + 240;
+    flyDX = (Math.random() - 0.5) * 12 + 4; // Random speed between -2 and 10
+    flyDY = (Math.random() - 0.5) * 12 + 3; // Random speed between -3 and 9
     
     // Start flying animation
     flyInterval = setInterval(() => {
@@ -224,22 +224,33 @@ flyBtn.onclick = function() {
       flyX += flyDX;
       flyY += flyDY;
       
-      // Bounce off walls with random direction changes
-      if (flyX <= 50 || flyX >= 1870) {
-        flyDX = -flyDX + (Math.random() - 0.5) * 4; // Add randomness to bounce
-        flyDX = Math.max(-12, Math.min(12, flyDX)); // Keep speed reasonable
-      }
-      if (flyY <= 50 || flyY >= 1030) {
-        flyDY = -flyDY + (Math.random() - 0.5) * 4; // Add randomness to bounce
-        flyDY = Math.max(-12, Math.min(12, flyDY)); // Keep speed reasonable
+      // Better wall collision with cleaner bounces
+      if (flyX <= 100) {
+        flyX = 100; // Keep inside bounds
+        flyDX = Math.abs(flyDX) + Math.random() * 2; // Always bounce right with randomness
+      } else if (flyX >= 1820) {
+        flyX = 1820; // Keep inside bounds
+        flyDX = -Math.abs(flyDX) - Math.random() * 2; // Always bounce left with randomness
       }
       
-      // Occasionally change direction randomly (10% chance each update)
-      if (Math.random() < 0.1) {
-        flyDX += (Math.random() - 0.5) * 6;
-        flyDY += (Math.random() - 0.5) * 6;
-        flyDX = Math.max(-12, Math.min(12, flyDX));
-        flyDY = Math.max(-12, Math.min(12, flyDY));
+      if (flyY <= 100) {
+        flyY = 100; // Keep inside bounds
+        flyDY = Math.abs(flyDY) + Math.random() * 2; // Always bounce down with randomness
+      } else if (flyY >= 980) {
+        flyY = 980; // Keep inside bounds
+        flyDY = -Math.abs(flyDY) - Math.random() * 2; // Always bounce up with randomness
+      }
+      
+      // Keep speeds reasonable
+      flyDX = Math.max(-10, Math.min(10, flyDX));
+      flyDY = Math.max(-10, Math.min(10, flyDY));
+      
+      // Occasionally change direction randomly (5% chance each update)
+      if (Math.random() < 0.05) {
+        flyDX += (Math.random() - 0.5) * 4;
+        flyDY += (Math.random() - 0.5) * 4;
+        flyDX = Math.max(-10, Math.min(10, flyDX));
+        flyDY = Math.max(-10, Math.min(10, flyDY));
       }
       
       // Calculate movement direction
@@ -249,10 +260,10 @@ flyBtn.onclick = function() {
         type: 'move',
         username,
         direction: direction,
-        force: 1.2 // Moderate force for flying movement
+        force: 1.0 // Moderate force for flying movement
       }));
       
-    }, 60); // 60ms = ~16 updates per second (smooth flying)
+    }, 80); // 80ms = ~12 updates per second (smooth but not too fast)
     
   } else {
     // Stop flying
