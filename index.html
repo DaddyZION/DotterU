@@ -137,6 +137,7 @@ document.getElementById('username').addEventListener('keydown', function(e) {
 
 // Track which keys are pressed
 const keysDown = {};
+let wasdInterval = null;
 
 document.addEventListener('keydown', function(e) {
   if (!socket || socket.readyState !== WebSocket.OPEN) return;
@@ -144,14 +145,19 @@ document.addEventListener('keydown', function(e) {
 
   keysDown[e.key.toLowerCase()] = true;
 
-  // Only send on new keydown (not repeat)
-  if (e.repeat) return;
-
-  sendWASDMove();
+  if (!wasdInterval) {
+    wasdInterval = setInterval(sendWASDMove, 30); // 30ms for smooth movement
+  }
 });
 
 document.addEventListener('keyup', function(e) {
   keysDown[e.key.toLowerCase()] = false;
+
+  // Stop interval if no WASD keys are pressed
+  if (!keysDown['w'] && !keysDown['a'] && !keysDown['s'] && !keysDown['d']) {
+    clearInterval(wasdInterval);
+    wasdInterval = null;
+  }
 });
 
 function sendWASDMove() {
