@@ -20,16 +20,17 @@
       position: absolute;
       width: 170px;
       height: 170px;
-      border-radius: 0;         /* No circle */
-      box-shadow: none;         /* No shadow */
-      border: none;             /* No border */
+      border-radius: 0;
+      box-shadow: none;
+      border: none;
       background-size: contain;
       background-repeat: no-repeat;
       background-position: center;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: left 0.1s, top 0.1s, transform 0.1s;
+      transition: left 0.1s, top 0.1s, transform 0.1s, filter 0.2s;
+      filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.8));
     }
   </style>
 </head>
@@ -69,27 +70,36 @@ function lerp(a, b, t) {
 socket.onmessage = function(event) {
   const msg = JSON.parse(event.data);
   if (msg.type === 'state') {
-    Object.values(characters).forEach(c => c.updated = false);
-
-    msg.users.forEach(user => {
-      let c = characters[user.username];
-      if (!c) {
-        const div = document.createElement('div');
-        div.className = 'character';
-        div.style.backgroundImage = `url('${user.sprite}')`;
-        overlay.appendChild(div);
-        c = characters[user.username] = {
-          div,
-          x: user.x, y: user.y,
-          tx: user.x, ty: user.y,
-          sprite: user.sprite,
-          lastX: user.x
-        };
-      }
-      c.tx = user.x;
-      c.ty = user.y;
-      c.updated = true;
-    });
+    Object.values(characters).forEach(c => c.updated = false);      msg.users.forEach(user => {
+        let c = characters[user.username];
+        if (!c) {
+          const div = document.createElement('div');
+          div.className = 'character';
+          div.style.backgroundImage = `url('${user.sprite}')`;
+          overlay.appendChild(div);
+          c = characters[user.username] = {
+            div,
+            x: user.x, y: user.y,
+            tx: user.x, ty: user.y,
+            sprite: user.sprite,
+            lastX: user.x
+          };
+        }
+        c.tx = user.x;
+        c.ty = user.y;
+        
+        // Apply glow effect based on user's chosen color
+        if (user.color) {
+          // Convert hex color to RGB for the drop-shadow filter
+          const hex = user.color.replace('#', '');
+          const r = parseInt(hex.substr(0, 2), 16);
+          const g = parseInt(hex.substr(2, 2), 16);
+          const b = parseInt(hex.substr(4, 2), 16);
+          c.div.style.filter = `drop-shadow(0 0 15px rgba(${r}, ${g}, ${b}, 0.8))`;
+        }
+        
+        c.updated = true;
+      });
 
     // Remove characters not in update
     for (const [username, c] of Object.entries(characters)) {

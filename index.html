@@ -12,9 +12,8 @@
   <h1>Control a Viking!</h1>
   <div class="panel">
     <input id="username" placeholder="Enter username" maxlength="16" autocomplete="off" />
-    <input type="color" id="color" title="Pick your color" />
+    <input type="color" id="color" title="Pick your glow color" />
     <button id="enterBtn">Enter</button>
-    <button id="danceBtn" disabled>🕺 Dance Mode</button>
   </div>
   <div id="joystick"></div>
   <div class="footer">
@@ -101,75 +100,7 @@ function setupJoystick() {
 }
 setupJoystick();
 
-// Dancing mode variables
-let isDancing = false;
-let danceInterval = null;
-let beatCount = 0;
-let facingRight = true;
-let bouncePhase = 0;
-
-// Dance button functionality (jiggle bounce in place)
-const danceBtn = document.getElementById('danceBtn');
-danceBtn.onclick = function() {
-  if (!joined) return;
-  
-  isDancing = !isDancing;
-  
-  if (isDancing) {
-    // Start dancing
-    danceBtn.textContent = '🛑 Stop Dancing';
-    danceBtn.style.background = '#ff4444';
-    
-    // Stop WASD movement if active
-    if (wasdInterval) {
-      clearInterval(wasdInterval);
-      wasdInterval = null;
-    }
-    
-    beatCount = 0;
-    facingRight = true;
-    bouncePhase = 0;
-    
-    // Start bounce dance (quick alternating up/down with direction flip)
-    danceInterval = setInterval(() => {
-      bouncePhase += 1; // Increment each beat
-      
-      // Quick bounce: alternate between up and down directions
-      let direction;
-      if (bouncePhase % 2 === 0) {
-        direction = facingRight ? 45 : 135; // Up-right or up-left
-      } else {
-        direction = facingRight ? 315 : 225; // Down-right or down-left
-      }
-      
-      socket.send(JSON.stringify({
-        type: 'move',
-        username,
-        direction: direction,
-        force: 0.05 // Very tiny force to just trigger sprite direction/mirroring
-      }));
-      
-      beatCount++;
-      if (beatCount >= 4) { // After 4 beats (1 second), flip direction
-        facingRight = !facingRight;
-        beatCount = 0;
-      }
-      
-    }, 250); // 250ms = 4 beats per second for visible bouncing
-    
-  } else {
-    // Stop dancing
-    danceBtn.textContent = '🕺 Dance Mode';
-    danceBtn.style.background = '#5a6cff';
-    
-    if (danceInterval) {
-      clearInterval(danceInterval);
-      danceInterval = null;
-    }
-  }
-};
-
-// Update the enterBtn onclick to enable the dance button
+// Update the enterBtn onclick
 document.getElementById('enterBtn').onclick = function(e) {
   e.preventDefault();
   username = document.getElementById('username').value.trim();
@@ -179,7 +110,6 @@ document.getElementById('enterBtn').onclick = function(e) {
   socket.onopen = function() {
     socket.send(JSON.stringify({ type: 'join', username, color }));
     joined = true;
-    danceBtn.disabled = false; // Enable dance button
   };
   document.getElementById('username').disabled = true;
   document.getElementById('color').disabled = true;
@@ -194,7 +124,6 @@ document.getElementById('enterBtn').onclick = function(e) {
       document.getElementById('enterBtn').disabled = false;
       joined = false;
       socket.close();
-      danceBtn.disabled = true; // Disable dance button on error
     }
   };
 };
@@ -213,7 +142,7 @@ let wasdInterval = null;
 
 document.addEventListener('keydown', function(e) {
   if (!socket || socket.readyState !== WebSocket.OPEN) return;
-  if (!joined || isDancing) return; // Don't allow WASD when dancing
+  if (!joined) return; // Don't allow WASD when not joined
 
   keysDown[e.key.toLowerCase()] = true;
 
