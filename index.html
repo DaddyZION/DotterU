@@ -16,6 +16,12 @@
     <button id="enterBtn">Enter</button>
   </div>
   <div id="joystick"></div>
+  <div id="minimap" style="display: none;">
+    <div id="minimap-title">Your Position</div>
+    <div id="minimap-area">
+      <div id="minimap-dot"></div>
+    </div>
+  </div>
   <div class="footer">
     Powered by DotterU &middot; Use the joystick to move your character!
   </div>
@@ -110,6 +116,7 @@ document.getElementById('enterBtn').onclick = function(e) {
   socket.onopen = function() {
     socket.send(JSON.stringify({ type: 'join', username, color }));
     joined = true;
+    document.getElementById('minimap').style.display = 'block'; // Show minimap
   };
   document.getElementById('username').disabled = true;
   document.getElementById('color').disabled = true;
@@ -124,6 +131,11 @@ document.getElementById('enterBtn').onclick = function(e) {
       document.getElementById('enterBtn').disabled = false;
       joined = false;
       socket.close();
+      document.getElementById('minimap').style.display = 'none'; // Hide minimap
+    }
+    if (msg.type === 'state') {
+      // Update minimap position
+      updateMinimap(msg.users);
     }
   };
 };
@@ -177,6 +189,27 @@ function sendWASDMove() {
       direction: angle,
       force: 1
     }));
+  }
+}
+
+// Minimap functionality
+function updateMinimap(users) {
+  const currentUser = users.find(user => user.username === username);
+  if (currentUser) {
+    const minimapDot = document.getElementById('minimap-dot');
+    const minimapArea = document.getElementById('minimap-area');
+    
+    // Scale position to minimap (1920x1080 -> 200x112)
+    const scaleX = 200 / 1920;
+    const scaleY = 112 / 1080;
+    
+    const dotX = currentUser.x * scaleX;
+    const dotY = currentUser.y * scaleY;
+    
+    minimapDot.style.left = dotX + 'px';
+    minimapDot.style.top = dotY + 'px';
+    minimapDot.style.background = currentUser.color;
+    minimapDot.style.boxShadow = `0 0 8px ${currentUser.color}`;
   }
 }
   </script>
