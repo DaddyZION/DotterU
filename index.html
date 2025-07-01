@@ -137,8 +137,8 @@ document.getElementById('username').addEventListener('keydown', function(e) {
 
 // Add this to your client-side JS (index.html or overlay.html)
 document.addEventListener('keydown', function(e) {
-  if (!window.socket || socket.readyState !== WebSocket.OPEN) return;
-  if (!window.joined) return; // Only allow after joining
+  if (!socket || socket.readyState !== WebSocket.OPEN) return;
+  if (!joined) return;
 
   let direction = null;
   if (e.key === 'w' || e.key === 'W') direction = 'up';
@@ -149,8 +149,8 @@ document.addEventListener('keydown', function(e) {
   if (direction) {
     socket.send(JSON.stringify({
       type: 'move',
-      username: window.username,
-      direction: direction,
+      username,
+      direction,
       force: 1
     }));
     e.preventDefault();
