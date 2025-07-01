@@ -134,6 +134,28 @@ document.getElementById('username').addEventListener('keydown', function(e) {
     document.getElementById('enterBtn').click();
   }
 });
+
+// Add this to your client-side JS (index.html or overlay.html)
+document.addEventListener('keydown', function(e) {
+  if (!window.socket || socket.readyState !== WebSocket.OPEN) return;
+  if (!window.joined) return; // Only allow after joining
+
+  let direction = null;
+  if (e.key === 'w' || e.key === 'W') direction = 'up';
+  if (e.key === 'a' || e.key === 'A') direction = 'left';
+  if (e.key === 's' || e.key === 'S') direction = 'down';
+  if (e.key === 'd' || e.key === 'D') direction = 'right';
+
+  if (direction) {
+    socket.send(JSON.stringify({
+      type: 'move',
+      username: window.username,
+      direction: direction,
+      force: 1
+    }));
+    e.preventDefault();
+  }
+});
   </script>
 </body>
 </html>
