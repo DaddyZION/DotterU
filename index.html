@@ -14,6 +14,7 @@
     <input id="username" placeholder="Enter username" maxlength="16" autocomplete="off" />
     <input type="color" id="color" title="Pick your color" />
     <button id="enterBtn">Enter</button>
+    <button id="danceBtn" disabled>🕺 Dance Mode</button>
   </div>
   <div id="joystick"></div>
   <div class="footer">
@@ -109,6 +110,7 @@ document.getElementById('enterBtn').onclick = function(e) {
   socket.onopen = function() {
     socket.send(JSON.stringify({ type: 'join', username, color }));
     joined = true;
+    danceBtn.disabled = false; // Enable dance button
   };
   document.getElementById('username').disabled = true;
   document.getElementById('color').disabled = true;
@@ -123,6 +125,7 @@ document.getElementById('enterBtn').onclick = function(e) {
       document.getElementById('enterBtn').disabled = false;
       joined = false;
       socket.close();
+      danceBtn.disabled = true; // Disable dance button on error
     }
   };
 };
@@ -141,7 +144,7 @@ let wasdInterval = null;
 
 document.addEventListener('keydown', function(e) {
   if (!socket || socket.readyState !== WebSocket.OPEN) return;
-  if (!joined) return;
+  if (!joined || isDancing) return; // Don't allow WASD when dancing
 
   keysDown[e.key.toLowerCase()] = true;
 
@@ -178,6 +181,54 @@ function sendWASDMove() {
     }));
   }
 }
+
+// Dancing mode variables
+let isDancing = false;
+let danceInterval = null;
+let danceAngle = 0;
+
+// Dance button functionality
+const danceBtn = document.getElementById('danceBtn');
+danceBtn.onclick = function() {
+  if (!joined) return;
+  
+  isDancing = !isDancing;
+  
+  if (isDancing) {
+    // Start dancing
+    danceBtn.textContent = '🛑 Stop Dancing';
+    danceBtn.style.background = '#ff4444';
+    
+    // Stop WASD movement if active
+    if (wasdInterval) {
+      clearInterval(wasdInterval);
+      wasdInterval = null;
+    }
+    
+    // Start dance movement
+    danceInterval = setInterval(() => {
+      danceAngle += 15; // Rotate by 15 degrees each step
+      if (danceAngle >= 360) danceAngle = 0;
+      
+      socket.send(JSON.stringify({
+        type: 'move',
+        username,
+        direction: danceAngle,
+        force: 1
+      }));
+    }, 100); // Send every 100ms for smooth dancing
+    
+  } else {
+    // Stop dancing
+    danceBtn.textContent = '🕺 Dance Mode';
+    danceBtn.style.background = '#5a6cff';
+    
+    if (danceInterval) {
+      clearInterval(danceInterval);
+      danceInterval = null;
+    }
+  }
+};
   </script>
 </body>
 </html>
