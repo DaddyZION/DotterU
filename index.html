@@ -187,6 +187,7 @@ let isDancing = false;
 let danceInterval = null;
 let beatCount = 0;
 let facingRight = true;
+let bouncePhase = 0;
 
 // Dance button functionality
 const danceBtn = document.getElementById('danceBtn');
@@ -208,20 +209,25 @@ danceBtn.onclick = function() {
     
     beatCount = 0;
     facingRight = true;
+    bouncePhase = 0;
     
-    // Start bouncy dance (4 beats per second)
+    // Start bouncy dance (4 beats per second for direction flip, 1 bounce per second)
     danceInterval = setInterval(() => {
-      // Don't send move commands - just trigger sprite mirroring
-      // The sprite will bounce in place due to the overlay animation
+      // Determine base direction (left/right)
+      let baseDirection = facingRight ? 0 : 180; // Right or left
       
-      // Send a tiny movement in the direction we're facing to trigger mirroring
-      let direction = facingRight ? 0 : 180; // Right or left
+      // Add bounce (up/down) - 1 bounce per second
+      bouncePhase += 0.25; // Increment for 4 updates per second
+      let bounceAngle = Math.sin(bouncePhase * Math.PI * 2) * 45; // ±45 degrees bounce
+      
+      // Combine horizontal facing with vertical bounce
+      let direction = baseDirection + (bounceAngle * 0.5); // Mix the directions
       
       socket.send(JSON.stringify({
         type: 'move',
         username,
         direction: direction,
-        force: 0.01 // Very tiny force so it barely moves
+        force: 0.3 // Small force for bouncing in place
       }));
       
       beatCount++;
@@ -230,7 +236,7 @@ danceBtn.onclick = function() {
         beatCount = 0;
       }
       
-    }, 250); // 250ms = 4 beats per second
+    }, 250); // 250ms = 4 updates per second
     
   } else {
     // Stop dancing
